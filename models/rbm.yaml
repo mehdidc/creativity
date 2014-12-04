@@ -1,0 +1,94 @@
+# This file shows how to train a binary RBM on MNIST by viewing it as a single layer DBM.
+# The hyperparameters in this file aren't especially great; they're mostly chosen to demonstrate
+# the interface. Feel free to suggest better hyperparameters!
+!obj:pylearn2.train.Train {
+    # For this example, we will train on a binarized version of MNIST.
+    # We binarize by drawing samples--if an MNIST pixel is set to 0.9,
+    # we make binary pixel that is 1 with probability 0.9. We redo the
+    # sampling every time the example is presented to the learning
+    # algorithm.
+    # In pylearn2, we do this by making a Binarizer dataset. The Binarizer
+    # is a dataset that can draw samples like this in terms of any
+    # input dataset with values in [0,1].
+    dataset: &data !obj:pylearn2.datasets.fonts.Fonts {
+            which_set: "train",
+            kind : "b_GF_clean"
+    },
+    model: !obj:pylearn2.models.rbm.RBM {
+
+        # The RBM needs 192 visible units (its inputs are 8x8 patches with 3
+        # color channels)
+        nvis : 256,
+
+        # We'll use 400 hidden units for this RBM. That's a small number but we
+        # want this example script to train quickly.
+        nhid : 10,
+
+        # The elements of the weight matrices of the RBM will be drawn
+        # independently from U(-0.05, 0.05)
+        irange : 0.05,
+        
+        init_bias_hid : -2.,
+    },
+
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        # The learning rate determines how big of steps the learning algorithm
+        # takes.  Here we use fairly big steps initially because we have a
+        # learning rate adjustment scheme that will scale them down if
+        # necessary.
+        learning_rate : 0.001,
+
+        # Each gradient step will be based on this many examples
+        batch_size : 20,
+
+        # We'll monitor our progress by looking at the first 20 batches of the
+        # training dataset. This is an estimate of the training error. To be
+        # really exhaustive, we could use the entire training set instead,
+        # or to avoid overfitting, we could use held out data instead.
+        monitoring_batches : 20,
+
+        monitoring_dataset : *data,
+
+        # Here we specify the objective function that stochastic gradient
+        # descent should minimize.  In this case we use denoising score
+        # matching, which makes this RBM behave as a denoising autoencoder.
+        # See
+        # Pascal Vincent. "A Connection Between Score Matching and Denoising
+        # Auutoencoders." Neural Computation, 2011
+        # for details.
+
+        cost : !obj:pylearn2.costs.ebm_estimation.SML {
+            batch_size: 20,
+            nsteps: 1,
+        },
+
+        # We'll use the monitoring dataset to figure out when to stop training.
+        #
+        # In this case, we stop if there is less than a 1% decrease in the
+        # training error in the last epoch.  You'll notice that the learned
+        # features are a bit noisy. If you'd like nice smooth features you can
+        # make this criterion stricter so that the model will train for longer.
+        # (setting N to 10 should make the weights prettier, but will make it
+        # run a lot longer)
+
+        termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter { 
+        max_epochs: 1000 },
+ 
+
+        # Let's throw a learning rate adjuster into the training algorithm.
+        # To do this we'll use an "extension," which is basically an event
+        # handler that can be registered with the Train object.
+        # This particular one is triggered on each epoch.
+        # It will shrink the learning rate if the objective goes up and increase
+        # the learning rate if the objective decreases too slowly. This makes
+        # our learning rate hyperparameter less important to get right.
+        # This is not a very mathematically principled approach, but it works
+        # well in practice.
+        },
+#    extensions : [!obj:pylearn2.training_algorithms.sgd.MonitorBasedLRAdjuster {}],
+    #Finally, request that the model be saved after each epoch
+    save_path: "rbm.pkl",
+    # This says to save it every epoch
+    save_freq : 1
+}
+
