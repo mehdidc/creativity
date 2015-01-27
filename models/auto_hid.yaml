@@ -1,0 +1,60 @@
+!obj:pylearn2.train.Train {
+    dataset: &data %(dataset)s,
+    model: !obj:pylearn2.models.autoencoder.DenoisingAutoencoder {
+        nvis : %(nvis)d,
+        nhid : %(nhid)d,
+        irange : 0.01,
+        corruptor: !obj:pylearn2.corruption.BinomialCorruptor {
+            corruption_level: .0,
+        },
+        act_enc: "sigmoid",
+        act_dec: "sigmoid",    # Linear activation on the decoder side.
+#        tied_weights: True
+    },
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        learning_rate : 1e-1,
+        batch_size : 100,
+        monitoring_batches : 10,
+        monitoring_dataset : *data,
+        cost : !obj:pylearn2.costs.autoencoder.MeanBinaryCrossEntropy {},
+
+        #learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {},
+        #
+        learning_rule : !obj:pylearn2.training_algorithms.learning_rule.Momentum {
+            init_momentum : 0.5,
+            nesterov_momentum : true
+        },
+
+   update_callbacks:[
+    !obj:pylearn2.training_algorithms.sgd.ExponentialDecay {
+        decay_factor: 1.00001,
+        min_lr: 1e-3
+    }
+   ],
+   termination_criterion: !obj:pylearn2.termination_criteria.And {
+            criteria: [
+                !obj:pylearn2.termination_criteria.MonitorBased {
+                    channel_name: "objective",
+                    prop_decrease: 0.,
+                    N: 10
+                },
+                !obj:pylearn2.termination_criteria.EpochCounter {
+                    max_epochs: 200
+                }
+            ]
+        }
+
+
+    },
+
+    extensions: [ 
+        !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {
+            start: 20,
+            saturate: 100,
+            final_momentum: .9
+        }
+    ],
+
+    save_path: "%(save)s",
+    save_freq: 1
+}

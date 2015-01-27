@@ -1,0 +1,11 @@
+!obj:pylearn2.models.autoencoder.ContractiveAutoencoder {
+        nvis : %(nvis)d,
+        nhid : %(nhid)d,
+        irange : 0.5,
+#        corruptor: !obj:pylearn2.corruption.SaltPepperCorruptor {
+#            corruption_level: 0.2,
+#        },
+        act_enc: %(act_enc)s,
+        act_dec: %(act_dec)s,    # Linear activation on the decoder side.
+        tied_weights: False
+}

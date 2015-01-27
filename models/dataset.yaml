@@ -1,0 +1,4 @@
+!obj:pylearn2.datasets.fonts.Fonts {
+            kind: 'all',
+            accept_only: ".*-[abcdxyz]-.*"
+}
