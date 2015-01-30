@@ -7,5 +7,5 @@
 #        },
         act_enc: %(act_enc)s,
         act_dec: %(act_dec)s,    # Linear activation on the decoder side.
-        tied_weights: False
+        tied_weights: True
 }
