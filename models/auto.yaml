@@ -6,7 +6,7 @@
         ]
     },
     algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
-        learning_rate : 0.00001,
+        learning_rate : 0.0000001,
         batch_size : 100,
         monitoring_batches : 10,
         monitoring_dataset : *train,
@@ -14,10 +14,10 @@
         cost : !obj:pylearn2.costs.cost.SumOfCosts {
             costs: [
                 !obj:pylearn2.costs.autoencoder.MeanBinaryCrossEntropy {},
-                !obj:pylearn2.costs.autoencoder.SparseActivation {
-                    coeff: 0.1,
-                    p : 0.0001
-                }
+#                !obj:pylearn2.costs.autoencoder.SparseActivation {
+#                    coeff: 0.1,
+#                    p : 0.0001
+#                }
             ]
         },
 
